@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101827">
+<title>A TOBE - Video Platform</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+ background:#0c1220;color:#f5f7ff;
+ font-family:Arial,sans-serif;
+ padding-bottom:80px;
+}
+header{
+ position:sticky;top:0;z-index:10;
+ background:#101827;padding:16px;
+ display:flex;justify-content:space-between;
+ align-items:center;border-bottom:1px solid #293448;
+}
+.logo{font-size:25px;font-weight:900;color:#63e6cf}
+.logo span{color:white}
+button{cursor:pointer;border:0}
+.header-btn{
+ background:#25364c;color:white;
+ padding:9px 13px;border-radius:12px;
+}
+.search-area{padding:14px}
+.search-area input{
+ width:100%;padding:13px;border:1px solid #35445a;
+ background:#19263a;color:white;border-radius:13px;
+ outline:none;font-size:15px;
+}
+.tabs{
+ display:flex;gap:9px;padding:0 14px 14px;
+ overflow-x:auto;
+}
+.tabs button{
+ white-space:nowrap;padding:10px 17px;
+ border-radius:20px;background:#1c2a3d;
+ color:white;
+}
+.tabs button.active{background:#63e6cf;color:#101827;font-weight:bold}
+.section{padding:0 14px 15px}
+.section-title{
+ font-size:19px;margin-bottom:13px;
+ display:flex;justify-content:space-between;
+ align-items:center;
+}
+.video-card{
+ background:#172337;border-radius:17px;
+ overflow:hidden;margin-bottom:17px;
+ border:1px solid #26364b;
+}
+.video-card video,.video-card iframe{
+ width:100%;display:block;background:#000;
+ aspect-ratio:16/9;
+}
+.video-info{padding:13px}
+.video-info h3{font-size:16px;margin-bottom:7px}
+.muted{color:#9baec5;font-size:12px}
+.actions{
+ display:flex;gap:16px;margin-top:12px;
+ align-items:center;flex-wrap:wrap;
+}
+.action-btn{
+ background:transparent;color:#dce8f6;
+ font-size:14px;padding:5px 0;
+}
+.action-btn.liked{color:#63e6cf}
+.bottom-nav{
+ position:fixed;bottom:0;left:0;right:0;
+ background:#111d2e;border-top:1px solid #29394e;
+ display:flex;justify-content:space-around;
+ padding:10px 4px calc(10px + env(safe-area-inset-bottom));
+ z-index:20;
+}
+.nav-btn{
+ background:none;color:#9baec5;
+ display:flex;flex-direction:column;
+ align-items:center;gap:4px;font-size:11px;
+}
+.nav-btn b{font-size:21px}
+.nav-btn.active{color:#63e6cf}
+.upload-box{
+ background:#172337;padding:18px;
+ border-radius:16px;margin-bottom:18px;
+}
+.upload-box input,.upload-box textarea{
+ width:100%;padding:12px;margin:7px 0;
+ border-radius:10px;border:1px solid #35445a;
+ background:#0e192a;color:white;
+}
+.primary{
+ background:#63e6cf;color:#101827;
+ padding:12px 18px;border-radius:11px;
+ font-weight:bold;width:100%;margin-top:8px;
+}
+.hidden{display:none!important}
+.shorts-card{
+ width:100%;max-width:370px;margin:0 auto 20px;
+ background:#172337;border-radius:18px;overflow:hidden;
+}
+.shorts-card video{
+ width:100%;height:min(68vh,570px);
+ object-fit:cover;background:black;
+}
+.shorts-info{padding:13px}
+.profile{
+ text-align:center;background:#172337;
+ padding:25px;border-radius:18px;
+}
+.avatar{
+ width:75px;height:75px;border-radius:50%;
+ background:#63e6cf;color:#101827;
+ display:grid;place-items:center;
+ font-size:28px;font-weight:bold;margin:0 auto 12px;
+}
+.modal{
+ position:fixed;inset:0;background:#000b;
+ z-index:50;display:flex;align-items:center;
+ justify-content:center;padding:18px;
+}
+.modal-content{
+ background:#172337;width:100%;max-width:450px;
+ padding:20px;border-radius:18px;max-height:85vh;
+ overflow-y:auto;
+}
+.modal-content input,.modal-content textarea{
+ width:100%;padding:12px;margin:8px 0;
+ border-radius:10px;background:#0c1626;
+ border:1px solid #35445a;color:white;
+}
+.comment{
+ background:#223249;padding:10px;
+ border-radius:10px;margin:9px 0;
+ font-size:14px;
+}
+.live-box{
+ text-align:center;padding:30px 15px;
+ background:#172337;border-radius:18px;
+}
+.live-dot{color:#ff5252;font-weight:bold}
+.empty{text-align:center;padding:35px;color:#9baec5}
+footer{text-align:center;color:#71839c;font-size:11px;padding:20px}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">A <span>TOBE</span></div>
+ <button class="header-btn" onclick="openAccount()">👤 Account</button>
+</header>
+
+<div class="search-area">
+ <input id="search" placeholder="🔍 ভিডিও খুঁজুন..."
+ oninput="renderVideos()">
+</div>
+
+<div class="tabs">
+ <button class="active" onclick="filterCategory('All',this)">For You</button>
+ <button onclick="filterCategory('Music',this)">Music</button>
+ <button onclick="filterCategory('Gaming',this)">Gaming</button>
+ <button onclick="filterCategory('Education',this)">Education</button>
+ <button onclick="filterCategory('Comedy',this)">Comedy</button>
+</div>
+
+<main>
+<section id="homePage" class="section">
+ <div class="section-title">
+  <b>✨ Trending Videos</b>
+  <span class="muted">A TOBE</span>
+ </div>
+ <div id="videoList"></div>
+</section>
+
+<section id="shortsPage" class="section hidden">
+ <div class="section-title">⚡ A TOBE Shorts</div>
+ <div id="shortList"></div>
+</section>
+
+<section id="uploadPage" class="section hidden">
+ <div class="section-title">🎬 Create Video</div>
+ <div class="upload-box">
+  <h3>Upload your video</h3>
+  <input id="videoTitle" placeholder="ভিডিওর নাম লিখুন">
+  <textarea id="videoDesc" placeholder="ভিডিও সম্পর্কে লিখুন"></textarea>
+  <select id="videoCategory" style="width:100%;padding:12px;background:#0e192a;color:white;border-radius:10px">
+   <option>Music</option><option>Gaming</option>
+   <option>Education</option><option>Comedy</option>
+   <option>Other</option>
+  </select>
+  <p class="muted" style="margin-top:12px">ভিডিও ফাইল নির্বাচন করুন</p>
+  <input type="file" id="videoFile" accept="video/*">
+  <label style="display:block;margin:12px 0">
+   <input type="checkbox" id="isShort"> এটি Shorts ভিডিও
+  </label>
+  <button class="primary" onclick="uploadVideo()">⬆ Publish Video</button>
+  <p class="muted" style="margin-top:10px">
+   এই ডেমোতে ভিডিও আপনার বর্তমান ব্রাউজার সেশনে দেখানো হবে।
+  </p>
+ </div>
+</section>
+
+<section id="livePage" class="section hidden">
+ <div class="section-title">🔴 Live Streaming</div>
+ <div class="live-box">
+  <div style="font-size:45px">📡</div>
+  <h2>Go Live</h2>
+  <p class="muted" style="margin:12px">
+   ভবিষ্যতে লাইভ সম্প্রচারের জন্য সার্ভার সংযুক্ত করতে হবে।
+  </p>
+  <input id="liveTitle" placeholder="লাইভের নাম লিখুন"
+   style="width:100%;padding:12px;background:#0c1626;color:white;border:1px solid #35445a;border-radius:10px">
+  <button class="primary" onclick="startLive()">Start Live Demo</button>
+  <p id="liveStatus" style="margin-top:15px"></p>
+ </div>
+</section>
+
+<section id="profilePage" class="section hidden">
+ <div class="section-title">👤 My Channel</div>
+ <div class="profile">
+  <div class="avatar" id="avatar">A</div>
+  <h2 id="profileName">A TOBE Creator</h2>
+  <p class="muted" id="profileEmail">Guest Account</p>
+  <div style="display:flex;justify-content:space-around;margin:22px 0">
+   <div><b id="myVideos">0</b><p class="muted">Videos</p></div>
+   <div><b id="myLikes">0</b><p class="muted">Likes</p></div>
+  </div>
+  <button class="primary" onclick="openAccount()">Edit / Login Account</button>
+ </div>
+ <h3 style="margin:20px 0 12px">My Uploads</h3>
+ <div id="myUploadList"></div>
+</section>
+</main>
+
+<nav class="bottom-nav">
+ <button class="nav-btn active" onclick="showPage('homePage',this)"><b>⌂</b>Home</button>
+ <button class="nav-btn" onclick="showPage('shortsPage',this)"><b>▶</b>Shorts</button>
+ <button class="nav-btn" onclick="showPage('uploadPage',this)"><b>＋</b>Create</button>
+ <button class="nav-btn" onclick="showPage('livePage',this)"><b>◉</b>Live</button>
+ <button class="nav-btn" onclick="showPage('profilePage',this)"><b>♙</b>Profile</button>
+</nav>
+
+<div id="modal" class="modal hidden">
+ <div class="modal-content" id="modalContent"></div>
+</div>
+
+<footer>© 2026 A TOBE • Create Your Own World</footer>
+
+<script>
+let videos=[];
+let currentUser=JSON.parse(localStorage.getItem("atobe_user")||"null");
+let currentCategory="All";
+
+function showPage(id,btn){
+ document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+ if(id==="profilePage") renderProfile();
+ if(id==="shortsPage") renderShorts();
+}
+
+function filterCategory(cat,btn){
+ currentCategory=cat;
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+ renderVideos();
+}
+
+function saveUser(){
+ localStorage.setItem("atobe_user",JSON.stringify(currentUser));
+}
+
+function openAccount(){
+ let name=currentUser?.name||"";
+ let email=currentUser?.email||"";
+ document.getElementById("modalContent").innerHTML=`
+ <h2>👤 A TOBE Account</h2>
+ <p class="muted" style="margin:10px 0">তোমার প্রোফাইল তৈরি করো</p>
+ <input id="accountName" placeholder="তোমার নাম" value="${escapeHTML(name)}">
+ <input id="accountEmail" type="email" placeholder="ইমেইল (ঐচ্ছিক)" value="${escapeHTML(email)}">
+ <button class="primary" onclick="saveAccount()">Save Account</button>
+ <button class="primary" style="background:#35445a;color:white" onclick="closeModal()">Close</button>
+ `;
+ document.getElementById("modal").classList.remove("hidden");
+}
+
+function saveAccount(){
+ let name=document.getElementById("accountName").value.trim();
+ let email=document.getElementById("accountEmail").value.trim();
+ if(!name){alert("নাম লিখুন");return}
+ currentUser={name,email};
+ saveUser();
+ closeModal();
+ renderProfile();
+ alert("প্রোফাইল তৈরি হয়েছে!");
+}
+
+function closeModal(){
+ document.getElementById("modal").classList.add("hidden");
+}
+
+function escapeHTML(s){
+ return String(s||"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function uploadVideo(){
+ let title=document.getElementById("videoTitle").value.trim();
+ let desc=document.getElementById("videoDesc").value.trim();
+ let file=document.getElementById("videoFile").files[0];
+ let category=document.getElementById("videoCategory").value;
+ let isShort=document.getElementById("isShort").checked;
+
+ if(!currentUser){
+  alert("প্রথমে Account তৈরি করুন");
+  openAccount();return;
+ }
+ if(!title||!file){
+  alert("ভিডিওর নাম ও ফাইল নির্বাচন করুন");return;
+ }
+ if(!file.type.startsWith("video/")){
+  alert("একটি ভিডিও ফাইল নির্বাচন করুন");return;
+ }
+ let url=URL.createObjectURL(file);
+ videos.unshift({
+  id:Date.now(),title,desc,category,url,
+  user:currentUser.name,
+  isShort,likes:0,comments:[],liked:false,
+  fileName:file.name
+ });
+ document.getElementById("videoTitle").value="";
+ document.getElementById("videoDesc").value="";
+ document.getElementById("videoFile").value="";
+ document.getElementById("isShort").checked=false;
+ renderVideos();renderShorts();renderProfile();
+ alert("ভিডিও যোগ হয়েছে!");
+ showPage("homePage",document.querySelector(".nav-btn"));
+}
+
+function videoCard(v){
+ return `
+ <article class="video-card">
+  <video controls playsinline preload="metadata" src="${v.url}"></video>
+  <div class="video-info">
+   <h3>${escapeHTML(v.title)}</h3>
+   <p class="muted">${escapeHTML(v.user)} · ${escapeHTML(v.category)}</p>
+   <p style="margin-top:8px;font-size:13px">${escapeHTML(v.desc)}</p>
+   <div class="actions">
+    <button class="action-btn ${v.liked?'liked':''}" onclick="likeVideo(${v.id})">
+     ♥ ${v.likes}
+    </button>
+    <button class="action-btn" onclick="openComments(${v.id})">
+     💬 ${v.comments.length}
+    </button>
+    <button class="action-btn" onclick="shareVideo(${v.id})">↗ Share</button>
+   </div>
+  </div>
+ </article>`;
+}
+
+function renderVideos(){
+ let q=document.getElementById("search").value.toLowerCase();
+ let list=videos.filter(v=>
+  !v.isShort &&
+  (currentCategory==="All"||v.category===currentCategory)&&
+  (v.title+" "+v.user+" "+v.category).toLowerCase().includes(q)
+ );
+ document.getElementById("videoList").innerHTML=
+ list.length?list.map(videoCard).join():
+ '<div class="empty">🎬 কোনো ভিডিও পাওয়া যায়নি।<br><br>প্রথম ভিডিওটি আপলোড করো!</div>';
+}
+
+function renderShorts(){
+ let list=videos.filter(v=>v.isShort);
+ document.getElementById("shortList").innerHTML=list.length?
+ list.map(v=>`
+ <div class="shorts-card">
+  <video controls playsinline loop src="${v.url}"></video>
+  <div class="shorts-info">
+   <b>${escapeHTML(v.title)}</b>
+   <p class="muted" style="margin:7px 0">${escapeHTML(v.user)}</p>
+   <div class="actions">
+    <button class="action-btn ${v.liked?'liked':''}" onclick="likeVideo(${v.id});renderShorts()">♥ ${v.likes}</button>
+    <button class="action-btn" onclick="openComments(${v.id})">💬 ${v.comments.length}</button>
+    <button class="action-btn" onclick="shareVideo(${v.id})">↗ Share</button>
+   </div>
+  </div>
+ </div>`).join():
+ '<div class="empty">⚡ এখনো Shorts নেই। প্রথম Shorts আপলোড করো!</div>';
+}
+
+function likeVideo(id){
+ let v=videos.find(x=>x.id===id);
+ if(!v)return;
+ v.liked=!v.liked;
+ v.likes+=v.liked?1:-1;
+ renderVideos();
+}
+
+function openComments(id){
+ let v=videos.find(x=>x.id===id);
+ if(!v)return;
+ document.getElementById("modalContent").innerHTML=`
+ <h2>💬 Comments</h2>
+ <p style="margin:10px 0">${escapeHTML(v.title)}</p>
+ <div id="commentList">
+ ${v.comments.length?v.comments.map(c=>`
+ <div class="comment"><b>${escapeHTML(c.user)}</b><br>${escapeHTML(c.text)}</div>
+ `).join(""):'<p class="muted">কোনো কমেন্ট নেই।</p>'}
+ </div>
+ <input id="commentInput" placeholder="তোমার কমেন্ট লিখো...">
+ <button class="primary" onclick="addComment(${id})">Post Comment</button>
+ <button class="primary" style="background:#35445a;color:white" onclick="closeModal()">Close</button>
+ `;
+ document.getElementById("modal").classList.remove("hidden");
+}
+
+function addComment(id){
+ let v=videos.find(x=>x.id===id);
+ let text=document.getElementById("commentInput").value.trim();
+ if(!text)return;
+ v.comments.push({
+  user:currentUser?.name||"Guest",
+  text
+ });
+ openComments(id);
+ renderVideos();
+}
+
+function shareVideo(id){
+ let v=videos.find(x=>x.id===id);
+ if(!v)return;
+ if(navigator.share){
+  navigator.share({title:v.title,text:"Watch on A TOBE"});
+ }else{
+  alert("A TOBE ভিডিও: "+v.title);
+ }
+}
+
+function startLive(){
+ if(!currentUser){openAccount();return}
+ let title=document.getElementById("liveTitle").value.trim();
+ if(!title){alert("লাইভের নাম লিখুন");return}
+ document.getElementById("liveStatus").innerHTML=
+ '<span class="live-dot">● LIVE DEMO</span><br><br>'+
+ escapeHTML(title)+'<br><br>এটি শুধু ডেমো। বাস্তব লাইভ সম্প্রচার নয়।';
+}
+
+function renderProfile(){
+ let name=currentUser?.name||"Guest Creator";
+ document.getElementById("profileName").textContent=name;
+ document.getElementById("profileEmail").textContent=currentUser?.email||"Guest Account";
+ document.getElementById("avatar").textContent=name.charAt(0).toUpperCase();
+ let mine=videos.filter(v=>v.user===name);
+ document.getElementById("myVideos").textContent=mine.length;
+ document.getElementById("myLikes").textContent=mine.reduce((a,v)=>a+v.likes,0);
+ document.getElementById("myUploadList").innerHTML=mine.length?
+ mine.map(videoCard).join():
+ '<div class="empty">এখনো কোনো ভিডিও আপলোড করোনি।</div>';
+}
+
+renderVideos();
+renderShorts();
+renderProfile();
+</script>
+</body>
+</html>
